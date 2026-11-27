@@ -28,7 +28,7 @@ Open http://127.0.0.1:8799. The local demo is unauthenticated; do not expose it 
 | Context | Meaning, relationships and state |
 | Contract | Executable requirements and guarantees |
 | Capability | Replaceable implementation or embedded PEP |
-| Outtake | Typed results and destinations |
+| Outtake | Typed results |
 
 ```mermaid
 flowchart LR
@@ -74,10 +74,9 @@ Outtake
     allocation: integer
     total: integer
     remaining: integer
-    allocation -> response
-    total -> response
-    remaining -> inventory_preview
 ```
+
+Outtake declares typed results only. There is no routing syntax. Delivery to the outside world is a capability whose `.capability` file declares `effect: true` under `Implementation`. An effect is deferred until the network has settled and its Guarantees pass, so transient intermediate values are never judged and nothing leaves a network that fails its contract. Effects cannot feed other steps or appear in Outtake, and they fail closed unless the trusted host supplies a `deliver` binding.
 
 The matching context and contract resolve by convention. `allocation.pep` is an embedded pipeline; it can have its own context, contract and frontend. Modes distribute reusable artifacts. Sidechains are PEP references inherited by descendants.
 
@@ -92,11 +91,11 @@ The matching context and contract resolve by convention. `allocation.pep` is an 
 - `projects/sidechain-demo`: inherited sidechains and execution evidence (`npm run sidechain:demo`).
 - `projects/social`: experimental schema-addressed storage and revision provenance (`npm run storage:demo`, `npm run storage:bench`).
 
-Read [implementation notes](docs/implementation-notes.md), [sidechains](docs/SIDECHAINS.md), [storage](docs/STORAGE-EXPERIMENT.md) and [provenance](docs/PROVENANCE.md). Legacy internal SDK identifiers and environment variables are retained for compatibility.
+Read [implementation notes](docs/implementation-notes.md), [effects](docs/EFFECTS.md), [sidechains](docs/SIDECHAINS.md), [storage](docs/STORAGE-EXPERIMENT.md) and [provenance](docs/PROVENANCE.md). Legacy internal SDK identifiers and environment variables are retained for compatibility.
 
 ## Status and safety
 
-The native grammar and API are unstable. The prototype has no production authentication, sandboxing, external integration adapters or general-purpose arbitrary capability execution. Treat all definitions and Modes as trusted local code. Storage and provenance experiments are not integrated with ordinary PEP transactions. Journal commitments are not independently authenticated. Route envelopes do not deliver external side effects. No AI service is required or bundled. Proprietary intelligence implementations and commercial hosted products are outside this repository.
+The native grammar and API are unstable. The prototype has no production authentication, sandboxing, external integration adapters or general-purpose arbitrary capability execution. Treat all definitions and Modes as trusted local code. Storage and provenance experiments are not integrated with ordinary PEP transactions. Journal commitments are not independently authenticated. No delivery adapters are bundled; effects need a host-supplied `deliver` binding. No AI service is required or bundled. Proprietary intelligence implementations and commercial hosted products are outside this repository.
 
 ## Contributing
 
