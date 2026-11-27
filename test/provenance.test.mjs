@@ -1,0 +1,16 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {Store,compile} from '../mode/storage/store.mjs';
+import {types,plan,policy,seed} from '../projects/social/demo.mjs';
+const allow=()=>true;
+const address=['posts.Post','p0','title'];
+const record={id:'p0',title:'Revised',body:'Hello',author:'u1',comments:['c1']};
+const setup=t=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ilk-prov-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return path.join(dir,'db');};
+test('revision history survives restart and unchanged fields are not duplicated',t=>{const file=setup(t);let s=new Store(types,file);seed(s);s.update('posts.Post',record,{actor:'u1',origin:'editor'});s.close();s=new Store(types,file);try{const h=s.history(address,allow);assert.deepEqual(h.map(x=>x.value),['Post 0','Revised']);assert.equal(h[1].actor,'u1');assert.equal(s.history(['posts.Post','p0','body'],allow).length,1);}finally{s.close();}});
+test('lineage pins source revision and invalid dependencies reject writes',t=>{const s=new Store(types,setup(t));try{seed(s);const ref=['identity.User','u1','name',1];s.update('posts.Post',record,{dependencies:[ref]});assert.deepEqual(s.history(address,allow)[1].dependencies,[ref]);assert.throws(()=>s.update('posts.Post',{...record,title:'bad'},{dependencies:[[...ref.slice(0,3),99]]}),/Missing dependency/);assert.equal(s.history(address,allow).length,2);}finally{s.close();}});
+test('data and provenance roll back together',t=>{const s=new Store(types,setup(t));try{seed(s);assert.throws(()=>s.transaction(()=>{s.write('posts.Post',record,true);throw Error('failed guarantee');}));assert.equal(s.history(address,allow).length,1);assert.equal(s.resolve(plan,{post_id:'p0'},policy).output.title,'Post 0');}finally{s.close();}});
+test('contract selects provenance and requires separate access policy',t=>{const file=setup(t);const s=new Store(types,file);try{seed(s);const contract=file+'.contract';fs.writeFileSync(contract,'Public\nRequire\npost_id: posts.Post\nGuarantee\ntitle: string\nauthor.name: string\nProvenance\nauthor.name: origin, revision\n');const p=compile(types,contract);assert.throws(()=>s.resolve(p,{post_id:'p0'},policy),/Provenance access denied/);const r=s.resolve(p,{post_id:'p0'},policy,allow);assert.deepEqual(r.provenance,[{address:['identity.User','u1','name'],origin:'local storage',revision:1}]);assert.throws(()=>s.history(address,()=>false),/denied/);assert.equal(s.resolve(plan,{post_id:'p0'},policy).provenance,undefined);}finally{s.close();}});
+test('tracked store cannot be opened by untracked writer',t=>{const file=setup(t);new Store(types,file).close();assert.throws(()=>new Store(types,file,{provenance:false}),/mode mismatch/);});

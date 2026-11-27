@@ -1,0 +1,7 @@
+Identity network
+
+Entity User
+    id: identifier
+    name: string
+    avatar: string
+    secret: string

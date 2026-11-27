@@ -1,0 +1,6 @@
+Comments network
+
+Entity Comment
+    id: identifier
+    body: string
+    author: identity.User

@@ -1,0 +1,7 @@
+Execution evidence
+
+Fields
+    phase: Lifecycle phase
+    path: Execution scope
+    digest: Event payload commitment
+    commitment: Evidence commitment

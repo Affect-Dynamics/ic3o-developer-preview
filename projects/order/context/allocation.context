@@ -1,0 +1,16 @@
+Allocation quantities
+
+Fields
+    requested: Requested item count
+    available: Available stock count
+    allocation: Fulfillable item count
+
+Frontend
+    ../frontend/allocation
+
+Expose
+    read: requested
+    read: available
+    read: allocation
+    invoke: self
+    invoke: allocation

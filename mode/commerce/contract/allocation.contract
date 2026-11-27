@@ -1,0 +1,9 @@
+Bounded allocation
+
+Require
+    requested >= 0
+    available >= 0
+
+Guarantee
+    allocation = min(requested, available)
+    allocation >= 0

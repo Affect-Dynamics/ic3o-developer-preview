@@ -1,0 +1,3 @@
+# Governance
+
+Proposed initial governance, subject to Affect Dynamics maintainer approval. The project is maintainer-led. Public discussion and independent Modes are encouraged. Core changes require maintainer review; grammar, compatibility and architectural invariants require a public RFC before implementation. RFCs describe motivation, proposed behavior, alternatives, compatibility and acceptance tests. Security issues follow SECURITY.md. Maintainers document consequential decisions and release notes. No contributor receives automatic write access. Publish named maintainers and configure protected main before public launch.

@@ -1,0 +1,10 @@
+SHA256 commitment
+
+Intake
+    value: text
+
+Implementation
+    native: sha256
+
+Outtake
+    digest: text

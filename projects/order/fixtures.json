@@ -1,0 +1,1 @@
+[{"name":"stock limited","input":{"requested":8,"available":5,"unit_price":250},"expected":{"allocation":5,"total":1250,"remaining":0}},{"name":"stock sufficient","input":{"requested":2,"available":9,"unit_price":125},"expected":{"allocation":2,"total":250,"remaining":7}},{"name":"negative request","input":{"requested":-1,"available":5,"unit_price":250},"error":"requested >= 0"}]

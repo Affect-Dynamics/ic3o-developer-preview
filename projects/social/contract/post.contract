@@ -1,0 +1,13 @@
+Public post
+
+Require
+    post_id: posts.Post
+
+Guarantee
+    id: identifier
+    title: string
+    body: string
+    author.name: string
+    author.avatar: string
+    comments[].body: string
+    comments[].author.name: string

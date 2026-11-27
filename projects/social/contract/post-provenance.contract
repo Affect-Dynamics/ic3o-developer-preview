@@ -1,0 +1,14 @@
+Public post with provenance
+Require
+    post_id: posts.Post
+Guarantee
+    id: identifier
+    title: string
+    body: string
+    author.name: string
+    author.avatar: string
+    comments[].body: string
+    comments[].author.name: string
+Provenance
+    title: origin, revision, actor, timestamp
+    author.name: origin, revision, verification

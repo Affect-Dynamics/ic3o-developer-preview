@@ -1,0 +1,11 @@
+minimum
+
+Intake
+    a: integer
+    b: integer
+
+Implementation
+    native: minimum
+
+Outtake
+    result: integer

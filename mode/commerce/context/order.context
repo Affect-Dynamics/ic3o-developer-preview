@@ -1,0 +1,24 @@
+Order quantities
+
+Fields
+    requested: Requested item count
+    available: Available stock count
+    unit_price: Unit price in cents
+    allocation: Fulfillable item count
+    total: Order cost in cents
+    remaining: Stock after allocation
+
+
+Expose
+    read: requested
+    read: available
+    read: unit_price
+    read: allocation
+    read: total
+    read: remaining
+    invoke: self
+    invoke: allocation
+    read: currency
+
+State
+    currency: "USD"

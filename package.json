@@ -1,0 +1,24 @@
+{
+  "name": "ic3o",
+  "version": "0.9.0",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "ic": "./cli.mjs",
+    "ic3o": "./cli.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "inspect": "node cli.mjs inspect",
+    "validate": "node cli.mjs validate",
+    "storage:demo": "node projects/social/demo.mjs",
+    "storage:bench": "node projects/social/benchmark.mjs",
+    "sidechain:demo": "node projects/sidechain-demo/demo.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "description": "Recursive, contract-governed application development framework",
+  "license": "Apache-2.0"
+}

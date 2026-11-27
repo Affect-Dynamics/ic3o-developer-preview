@@ -1,0 +1,15 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {Store,compile} from '../mode/storage/store.mjs';
+import {types,plan,policy,seed} from '../projects/social/demo.mjs';
+const setup=t=>{const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ilk-store-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return path.join(dir,'test.db');};
+test('compiled retrieval across three networks survives restart',t=>{const file=setup(t);let s=new Store(types,file);seed(s,1000);s.close();s=new Store(types,file);try{const r=s.resolve(plan,{post_id:'p0'},policy);assert.equal(r.output.author.name,'Ada');assert.equal(r.output.comments[0].author.name,'Grace');assert.equal(r.cellReads,10);assert.equal(r.modelCalls,0);assert.equal(r.output.author.secret,undefined);}finally{s.close();}});
+test('unrelated records do not change addressed cell count',t=>{const s=new Store(types,setup(t));try{seed(s);const before=s.resolve(plan,{post_id:'p0'},policy);s.transaction(()=>{for(let i=1;i<1001;i++)s.write('posts.Post',{id:`p${i}`,title:'Other',body:'Other',author:'u1',comments:[]});});assert.equal(s.resolve(plan,{post_id:'p0'},policy).cellReads,before.cellReads);}finally{s.close();}});
+test('invalid references and types reject writes atomically',t=>{const s=new Store(types,setup(t));try{seed(s);assert.throws(()=>s.update('posts.Post',{id:'p0',title:'Changed',body:'Hello',author:'missing',comments:[]}));assert.equal(s.resolve(plan,{post_id:'p0'},policy).output.title,'Post 0');assert.throws(()=>s.insert('posts.Post',{id:'bad',title:7,body:'Hello',author:'u1',comments:[]}));assert.equal(s.exists.get('posts.Post','bad'),undefined);}finally{s.close();}});
+test('cross network policy failure and missing identity reject retrieval',t=>{const s=new Store(types,setup(t));try{seed(s);assert.throws(()=>s.resolve(plan,{post_id:'p0'},(scope)=>scope!=='identity.User'),/denied/);assert.throws(()=>s.resolve(plan,{post_id:'nope'},policy),/Missing entity/);assert.throws(()=>s.resolve(plan,{post_id:'p0'}),/policy/);}finally{s.close();}});
+test('invalid field fails contract compilation',t=>{const file=setup(t);fs.writeFileSync(file,'Bad\nRequire\npost_id: posts.Post\nGuarantee\nauthor.nonsense: string\n');assert.throws(()=>compile(types,file),/Unknown field/);});
+test('indexed point lookup uses primary key',t=>{const s=new Store(types,setup(t));try{const q=s.db.prepare('EXPLAIN QUERY PLAN SELECT value FROM cells WHERE scope=? AND id=? AND field=?').all('posts.Post','p0','title');assert.match(q[0].detail,/SEARCH.*PRIMARY KEY/);}finally{s.close();}});
+test('schema changes require migration',t=>{const file=setup(t);new Store(types,file).close();const changed=new Map(types);changed.set('extra.Thing',new Map([['id',{type:'identifier',array:false}]]));assert.throws(()=>new Store(changed,file),/migration/);});

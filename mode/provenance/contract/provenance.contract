@@ -1,0 +1,4 @@
+Evidence contract
+
+Guarantee
+    commitment = sha256(digest)

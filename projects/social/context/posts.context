@@ -1,0 +1,8 @@
+Posts network
+
+Entity Post
+    id: identifier
+    title: string
+    body: string
+    author: identity.User
+    comments: comments.Comment[]
