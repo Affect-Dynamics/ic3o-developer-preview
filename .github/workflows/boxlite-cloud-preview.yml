@@ -1,0 +1,105 @@
+name: BoxLite Cloud preview
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: boxlite-cloud-preview
+  cancel-in-progress: false
+jobs:
+  preview:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Verify source before allocating cloud resources
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          node cli.mjs test projects/order
+          node cli.mjs test projects/mode-order
+      - name: Install experimental BoxLite CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL https://sh.boxlite.ai -o "$RUNNER_TEMP/boxlite-install.sh"
+          sh "$RUNNER_TEMP/boxlite-install.sh"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Deploy and verify private cloud preview
+        env:
+          BOXLITE_API_KEY: ${{ secrets.BOXLITE_API_KEY }}
+          BOXLITE_REST_URL: https://api.boxlite.ai
+          BOX_NAME: ic3o-preview-${{ github.run_id }}-${{ github.run_attempt }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${BOXLITE_API_KEY:?Configure the repository secret BOXLITE_API_KEY}"
+          export BOXLITE_HOME="$(mktemp -d)"
+          trap 'rm -rf "$BOXLITE_HOME"' EXIT
+          boxlite --version
+          # Confirm remote authentication before allocating a box.
+          boxlite list >/dev/null
+          echo "Cloud box name: $BOX_NAME"
+          echo "Source commit: $GITHUB_SHA"
+          # No host mounts, credentials, public ports, or persistent volumes.
+          # The guest fetches only the public source at the exact tested SHA.
+          timeout --signal=TERM --kill-after=15s 7m boxlite run --rm --name "$BOX_NAME" node:22-bookworm sh -ec '
+            set -eu
+            git init /work
+            cd /work
+            git fetch --depth=1 https://github.com/Affect-Dynamics/ic3o-developer-preview.git "$1"
+            git checkout --detach FETCH_HEAD
+            test "$(git rev-parse HEAD)" = "$1"
+            npm ci --ignore-scripts --offline
+            npm test
+            node cli.mjs test projects/order
+            node cli.mjs test projects/mode-order
+            HOST=127.0.0.1 PORT=8799 node server.mjs > /tmp/ic3o-preview.log 2>&1 &
+            pid=$!
+            trap "kill $pid 2>/dev/null || true" EXIT
+            node --input-type=module -e "
+              import assert from \"node:assert/strict\";
+              const base = \"http://127.0.0.1:8799\";
+              let page;
+              for (let i = 0; i < 30; i++) {
+                try { page = await fetch(base); if (page.ok) break; } catch {}
+                await new Promise(r => setTimeout(r, 500));
+              }
+              assert.ok(page?.ok, \"Dashboard not reachable\");
+              const html = await page.text();
+              assert.ok(html.includes(\"ic3o\") || html.includes(\"IC3O\"), \"Dashboard branding missing\");
+              const network = await fetch(base + \"/api/network\");
+              assert.ok(network.ok);
+              assert.equal((await network.json()).name, \"order\");
+              const tests = await fetch(base + \"/api/tests\");
+              assert.ok(tests.ok);
+              const fixtures = await tests.json();
+              assert.ok(fixtures.length && fixtures.every(f => f.pass));
+              const run = await fetch(base + \"/api/run\", {method:\"POST\", headers:{\"Content-Type\":\"application/json\"}, body:JSON.stringify({requested:8,available:5,unit_price:250})});
+              assert.ok(run.ok);
+              const result = await run.json();
+              assert.deepEqual(result.output, {allocation:5,total:1250,remaining:0});
+              console.log(\"Cloud dashboard, network, fixtures and execution verified\");
+            "
+          ' sh "$GITHUB_SHA"
+      - name: Attempt cloud teardown even on failure
+        if: always()
+        env:
+          BOXLITE_API_KEY: ${{ secrets.BOXLITE_API_KEY }}
+          BOXLITE_REST_URL: https://api.boxlite.ai
+          BOX_NAME: ic3o-preview-${{ github.run_id }}-${{ github.run_attempt }}
+        shell: bash
+        run: |
+          if [[ -z "$BOXLITE_API_KEY" ]] || ! command -v boxlite >/dev/null; then
+            exit 0
+          fi
+          if ! boxlite rm -f "$BOX_NAME"; then
+            echo "::warning::Explicit removal did not succeed (the box may already have been removed by --rm). Check the cloud console for $BOX_NAME."
+          fi
+          boxlite list
