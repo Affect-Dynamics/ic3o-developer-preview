@@ -1,0 +1,11 @@
+floor-divide
+
+Intake
+    a: integer
+    b: integer
+
+Implementation
+    native: floor_divide
+
+Outtake
+    result: integer
