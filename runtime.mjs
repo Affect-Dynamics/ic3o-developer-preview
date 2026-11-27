@@ -45,7 +45,20 @@ function primitives(p,kind,scope){
 }
 function type(value,t){return t==='integer'?Number.isSafeInteger(value):t==='number'?typeof value==='number'&&Number.isFinite(value):t==='text'?typeof value==='string':typeof value==='boolean'}
 function checkFields(spec,values,where){for(const [key,t] of Object.entries(spec)){if(!Object.hasOwn(values,key)||!type(values[key],t))fail(`${where}.${key}: expected ${t}`)}}
-const natives={sha256:value=>createHash('sha256').update(value).digest('hex'),minimum:Math.min,multiply:(a,b)=>a*b,subtract:(a,b)=>a-b};
+function exactInteger(a,b,operation){
+ if(!Number.isSafeInteger(a)||!Number.isSafeInteger(b))fail('Expected safe integer operands');
+ const x=BigInt(a),y=BigInt(b);
+ let result;
+ if(operation==='add')result=x+y;
+ else{
+  if(y===0n)fail('Division by zero');
+  result=x/y;
+  if(x%y!==0n&&(x<0n)!==(y<0n))result-=1n;
+ }
+ if(result>BigInt(Number.MAX_SAFE_INTEGER)||result<BigInt(Number.MIN_SAFE_INTEGER))fail('Integer overflow');
+ return Number(result);
+}
+const natives={add:(a,b)=>exactInteger(a,b,'add'),floor_divide:(a,b)=>exactInteger(a,b,'floor_divide'),sha256:value=>createHash('sha256').update(value).digest('hex'),minimum:Math.min,multiply:(a,b)=>a*b,subtract:(a,b)=>a-b};
 // Restricted expressions: no eval, no arbitrary JavaScript.
 function operand(s,env){s=s.trim();if(/^-?\d+(\.\d+)?$/.test(s))return Number(s);if(Object.hasOwn(env,s))return env[s];fail(`Unknown value: ${s}`)}
 function expr(s,env){s=s.trim();const hash=s.match(/^sha256\((\w+)\)$/);if(hash)return natives.sha256(operand(hash[1],env));const min=s.match(/^min\((\w+),\s*(\w+)\)$/);if(min)return Math.min(operand(min[1],env),operand(min[2],env));const m=s.match(/^(\w+)\s*([*+-])\s*(\w+)$/);if(m){const a=operand(m[1],env),b=operand(m[3],env);return m[2]==='*'?a*b:m[2]==='+'?a+b:a-b}return operand(s,env)}

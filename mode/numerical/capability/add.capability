@@ -1,0 +1,11 @@
+add
+
+Intake
+    a: integer
+    b: integer
+
+Implementation
+    native: add
+
+Outtake
+    result: integer
