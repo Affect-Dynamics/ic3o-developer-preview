@@ -1,0 +1,52 @@
+name: Registry publication
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: registry-pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: node --test
+      - name: Build pull request preview without credentials
+        if: github.event_name == 'pull_request'
+        run: node tools/registry/build.mjs "${{ runner.temp }}/registry-site"
+      - name: Generate attributed catalog from main
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/registry/build.mjs "${{ runner.temp }}/registry-site"
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/registry-site
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy catalog
+        id: deployment
+        uses: actions/deploy-pages@v4
