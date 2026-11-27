@@ -21,10 +21,12 @@ jobs:
             echo "::error::No /dev/kvm on this runner. BoxLite needs a KVM-capable runner."
             exit 1
           fi
-          if [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
-            sudo setfacl -m "u:$(id -un):rw" /dev/kvm
-          fi
-          test -r /dev/kvm && test -w /dev/kvm
+          getent group kvm >/dev/null || sudo groupadd --system kvm
+          sudo chgrp kvm /dev/kvm
+          sudo chmod 660 /dev/kvm
+          sudo usermod -aG kvm "$(id -un)"
+          ls -l /dev/kvm
+          sg kvm -c 'id; exec 3<>/dev/kvm; exec 3>&-'
       - name: Install BoxLite (experimental upstream installer)
         shell: bash
         run: |
@@ -36,6 +38,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Execute BoxLite with fresh KVM group membership, not as root.
+          sg kvm -c 'bash -se' <<'BOXLITE_TEST'
+          set -euo pipefail
+          id
+          exec 3<>/dev/kvm
+          exec 3>&-
           unset BOXLITE_API_KEY BOXLITE_REST_URL BOXLITE_CONTEXT BOXLITE_PROFILE
           export BOXLITE_HOME="$(mktemp -d)"
           snapshot="$(mktemp -d)"
@@ -53,3 +61,4 @@ jobs:
           set -e
           test "$status" -eq 42
           boxlite run --rm --network disabled --inbound disabled --cpus 2 --memory 2048 -v "$snapshot:/source:ro" "$image" sh -ec 'mkdir /work; cp -R /source/. /work/; cd /work; npm ci --ignore-scripts --offline; npm test; node cli.mjs test projects/order; node cli.mjs test projects/mode-order'
+          BOXLITE_TEST
