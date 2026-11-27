@@ -1,0 +1,45 @@
+name: DCO
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  signoff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify author sign-offs without executing contributor code
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EXPECTED_COUNT: ${{ github.event.pull_request.commits }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/commits?per_page=100" --slurp > "$RUNNER_TEMP/dco-commits.json"
+          node - "$RUNNER_TEMP/dco-commits.json" <<'JS'
+          const fs = require('node:fs');
+          const commits = JSON.parse(fs.readFileSync(process.argv[2], 'utf8')).flat();
+          if (commits.length !== Number(process.env.EXPECTED_COUNT) || !commits.length) {
+            throw new Error('Commit enumeration incomplete; split the PR or investigate.');
+          }
+          let failed = false;
+          for (const {sha, commit} of commits) {
+            const author = commit.author;
+            const lines = commit.message.trimEnd().split(/\r?\n/);
+            const trailers = [];
+            for (let i = lines.length - 1; i >= 0; i--) {
+              if (!/^[A-Za-z][A-Za-z0-9-]*: .+$/.test(lines[i])) break;
+              trailers.push(lines[i]);
+            }
+            const expected = 'signed-off-by: ' + author.name + ' <' + author.email + '>';
+            if (!trailers.some(line => line.toLowerCase() === expected.toLowerCase())) {
+              console.log('Missing matching author sign-off: ' + sha);
+              failed = true;
+            }
+          }
+          if (failed) process.exitCode = 1;
+          else console.log('DCO sign-offs verified: ' + commits.length);
+          JS
