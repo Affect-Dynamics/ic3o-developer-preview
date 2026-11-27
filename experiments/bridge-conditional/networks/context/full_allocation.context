@@ -1,0 +1,6 @@
+Full allocation context
+
+Fields
+    quantity: Item count fulfilled in full
+    unit_price: Unit price in cents
+    total: Order cost in cents

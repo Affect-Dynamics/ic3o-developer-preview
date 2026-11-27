@@ -1,0 +1,11 @@
+Partial allocation contract
+
+Require
+    quantity > 0
+    requested > quantity
+    unit_price >= 0
+
+Guarantee
+    total = quantity * unit_price
+    shortfall = requested - quantity
+    shortfall > 0

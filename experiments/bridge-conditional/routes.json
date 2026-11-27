@@ -1,0 +1,34 @@
+{
+  "entry": "allocate",
+  "terminals": ["full_allocation", "partial_allocation", "unavailable_inventory"],
+  "networks": {
+    "allocate": "networks/pep/allocate.pep",
+    "full_allocation": "networks/pep/full_allocation.pep",
+    "partial_allocation": "networks/pep/partial_allocation.pep",
+    "unavailable_inventory": "networks/pep/unavailable_inventory.pep"
+  },
+  "maxHops": 4,
+  "routes": [
+    {
+      "id": "to-full",
+      "from": "allocate",
+      "to": "full_allocation",
+      "when": "allocation = requested and allocation > 0",
+      "map": {"quantity": "allocation", "unit_price": "unit_price"}
+    },
+    {
+      "id": "to-partial",
+      "from": "allocate",
+      "to": "partial_allocation",
+      "when": "allocation > 0 and allocation < requested",
+      "map": {"quantity": "allocation", "requested": "requested", "unit_price": "unit_price"}
+    },
+    {
+      "id": "to-unavailable",
+      "from": "allocate",
+      "to": "unavailable_inventory",
+      "when": "allocation = 0",
+      "map": {"requested": "requested"}
+    }
+  ]
+}
