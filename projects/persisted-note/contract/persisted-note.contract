@@ -1,0 +1,6 @@
+Persist note
+Require
+    approved >= 0
+Guarantee
+    approved = 1
+    saved = body

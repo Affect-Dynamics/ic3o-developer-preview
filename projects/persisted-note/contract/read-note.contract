@@ -1,0 +1,5 @@
+Read note
+Require
+    note_id: notes.Note
+Guarantee
+    body: string

@@ -1,0 +1,4 @@
+Note storage
+Entity Note
+    id: identifier
+    body: string

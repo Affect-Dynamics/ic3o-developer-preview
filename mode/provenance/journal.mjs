@@ -3,23 +3,32 @@ import {createHash,randomUUID} from 'node:crypto';
 import {run} from '../../runtime.mjs';
 const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const genesis = '0'.repeat(64);
-// Dedicated execution journal; not the field revision store.
+// Shared primitives: the caller owns the transaction.
+export function initializeEvidence(db) {
+    db.exec(`CREATE TABLE IF NOT EXISTS execution_evidence (
+        seq INTEGER PRIMARY KEY, previous TEXT NOT NULL, payload TEXT NOT NULL, hash TEXT NOT NULL
+    )`);
+}
+export function appendEvidence(db,payload) {
+    const last=db.prepare('SELECT seq,hash FROM execution_evidence ORDER BY seq DESC LIMIT 1').get();
+    const seq=(last?.seq??0)+1, previous=last?.hash??genesis;
+    const body=JSON.stringify(payload), commitment=hash([seq,previous,body]);
+    db.prepare('INSERT INTO execution_evidence VALUES (?,?,?,?)').run(seq,previous,body,commitment);
+    return {seq,hash:commitment};
+}
+// Standalone execution journal remains compatible with v0.9.
 export class Journal {
     constructor(file) {
         this.db = new DatabaseSync(file);
-        this.db.exec(`PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS execution_evidence (
-          seq INTEGER PRIMARY KEY, previous TEXT NOT NULL, payload TEXT NOT NULL, hash TEXT NOT NULL
-        )`);
+        this.db.exec('PRAGMA busy_timeout=5000');
+        initializeEvidence(this.db);
     }
     append(payload) {
         this.db.exec('BEGIN IMMEDIATE');
         try {
-            const last = this.db.prepare('SELECT seq,hash FROM execution_evidence ORDER BY seq DESC LIMIT 1').get();
-            const seq = (last?.seq ?? 0) + 1, previous = last?.hash ?? genesis;
-            const body = JSON.stringify(payload), commitment = hash([seq,previous,body]);
-            this.db.prepare('INSERT INTO execution_evidence VALUES (?,?,?,?)').run(seq,previous,body,commitment);
+            const checkpoint = appendEvidence(this.db,payload);
             this.db.exec('COMMIT');
-            return {seq,hash:commitment};
+            return checkpoint;
         } catch(error) { this.db.exec('ROLLBACK'); throw error; }
     }
     verify(checkpoint) {
