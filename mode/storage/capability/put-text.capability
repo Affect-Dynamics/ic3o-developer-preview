@@ -1,0 +1,8 @@
+Persist text
+Intake
+    id: text
+    body: text
+Implementation
+    native: storage_put_text
+Outtake
+    saved: text

@@ -1,0 +1,6 @@
+Note request
+Fields
+    id: text
+    body: text
+    approved: integer
+    saved: text
