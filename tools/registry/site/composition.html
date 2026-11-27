@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'"><title>Networks and Modes | ic3o documentation</title><link rel="stylesheet" href="style.css"><script type="module" src="docs.mjs"></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="index.html">◇ ic3o <small>/ documentation</small></a><a href="https://github.com/Affect-Dynamics/ic3o-developer-preview">GitHub ↗</a></header><div class="shell"><aside><nav aria-label="Documentation"><p class="navlabel">GET STARTED</p><a href="index.html">Overview</a><a href="quickstart.html">Install & first run</a><a href="first-app.html">Build your first application</a><p class="navlabel">LEARN THE FRAMEWORK</p><a href="architecture.html">Mental model</a><a href="language.html">Native definitions</a><a href="composition.html" aria-current="page">Networks & Modes</a><a href="infrastructure.html">Sidechains & state</a><p class="navlabel">DEVELOPER WORKFLOW</p><a href="cli.html">CLI reference</a><a href="contribute.html">Contribution guide</a><a href="troubleshoot.html">Troubleshooting</a><a href="registry.html">Registry</a><a href="status.html">Development status</a><p class="navlabel">COMMUNITY</p><a href="https://github.com/Affect-Dynamics/gh-ic3o">CLI extension ↗</a><a href="https://github.com/Affect-Dynamics/ic3o-developer-preview/issues">Issues ↗</a><a href="https://github.com/Affect-Dynamics/ic3o-developer-preview/pulls">Pull requests ↗</a></nav></aside><main id="main"><p class="crumb">Documentation / Networks and Modes</p><h1>Networks and Modes</h1><p class="lead">Use the same interface to invoke a primitive operation or an entire network. Then package reusable definitions as Modes.</p><details class="toc" open><summary>On this page</summary><a href="#child">A capability can be a network</a><a href="#modes">Import a Mode</a><a href="#resolve">Deterministic resolution order</a><a href="#run">Try the bundled example</a><a href="#share">Package work for reuse</a></details>
+<h2 id="child">A capability can be a network</h2><pre><code>Capability
+    allocation = allocation.pep(requested, available)
+    total = multiply.capability(allocation, unit_price)
+    remaining = subtract.capability(available, allocation)</code></pre><p>The allocation PEP has its own Intake, Context, Contract and Outtake. The parent consumes its returned allocation, while its internal contract remains active. Trace paths preserve the calling hierarchy.</p><pre><code>Bounded allocation
+Intake
+    requested: integer
+    available: integer
+Context
+    order.context
+    allocation.context
+Capability
+    allocation = minimum.capability(requested, available)
+Outtake
+    allocation: integer
+    allocation -&gt; parent</code></pre><p>See <a href="https://github.com/Affect-Dynamics/ic3o-developer-preview/blob/main/projects/order/pep/order.pep">parent PEP ↗</a> and <a href="https://github.com/Affect-Dynamics/ic3o-developer-preview/blob/main/projects/order/contract/allocation.contract">child contract ↗</a>.</p>
+<h2 id="modes">Import a Mode</h2><p>A Mode is a local reusable library of the four native definition types, not a new native primitive. It may also provide frontend assets. Commerce declares its numerical dependency in mode.json.</p><pre><code>Use
+    commerce
+
+Context
+    commerce:order.context
+
+Contract
+    commerce:order.contract
+
+Capability
+    allocation = allocation.pep(requested, available)
+    total = numerical:multiply.capability(allocation, unit_price)
+    remaining = subtract.capability(available, allocation)</code></pre><pre><code>mode/commerce/mode.json
+{"use":["numerical"]}</code></pre><p>The qualified numerical reference is visible transitively because commerce depends on numerical.</p>
+<h2 id="resolve">Deterministic resolution order</h2><ol><li>Resolve an explicit relative path or qualified visible Mode reference.</li><li>For a bare reference, check the conventional local directory.</li><li>Search visible Modes and their dependencies. Reject ambiguous matches instead of choosing by import order.</li><li>For a capability only, fall back to the universal registry.</li><li>Reject unresolved references.</li></ol><p>A local child inherits caller-visible Modes and may import more. A Mode-owned child resolves within its own Mode dependency scope, plus explicit imports. Static reference and Mode dependency cycles are rejected.</p>
+<h2 id="run">Try the bundled example</h2><pre><code>gh ic3o modes
+gh ic3o dashboard</code></pre><p>Register the bundled mode-order example in Applications. Alternatively, from a trusted framework checkout:</p><pre><code>node cli.mjs inspect projects/mode-order
+node cli.mjs test projects/mode-order
+node cli.mjs run projects/mode-order requested=12 available=8 unit_price=5</code></pre><p>Expect allocation 8, total 40 and remaining 0. The same outcome is available in the local order example. The trace reveals the resolved origins, not merely the final number.</p>
+<h2 id="share">Package work for reuse</h2><p>Separate domain-specific definitions into a focused Mode, include dependencies, document inputs and guarantees, add a reference project and fixtures, and submit a reviewed PR. Independent remote Mode installation and version locks are not available yet.</p><p class="next"><a href="infrastructure.html">Continue: Sidechains and state →</a></p><footer>Affect Dynamics · <a href="https://github.com/Affect-Dynamics/ic3o-developer-preview">Framework source</a> · <a href="https://github.com/Affect-Dynamics/gh-ic3o">Contributor extension</a></footer></main></div></body></html>
