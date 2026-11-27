@@ -12,4 +12,3 @@ Capability
     saved = storage:put-text.capability(id, body)
 Outtake
     saved: text
-    saved -> response

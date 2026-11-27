@@ -10,7 +10,7 @@ export function scaffold(parent,name){
     const root=path.resolve(parent,name);
     fs.mkdirSync(root);
     const files={
-        ['pep/'+name+'.pep']:name+'\nIntake\n    quantity: integer\n    price: integer\nCapability\n    total = multiply.capability(quantity, price)\nOuttake\n    total: integer\n    total -> response\n',
+        ['pep/'+name+'.pep']:name+'\nIntake\n    quantity: integer\n    price: integer\nCapability\n    total = multiply.capability(quantity, price)\nOuttake\n    total: integer\n',
         ['context/'+name+'.context']:'Order context\nFields\n    quantity: Quantity\n    price: Unit price\n    total: Total price\n',
         ['contract/'+name+'.contract']:'Order contract\nRequire\n    quantity >= 0\n    price >= 0\nGuarantee\n    total = quantity * price\n',
         'fixtures.json':JSON.stringify([{name:'valid order',input:{quantity:2,price:5},expected:{total:10}},{name:'invalid order',input:{quantity:-1,price:5},error:'quantity >= 0'}],null,2)+'\n',

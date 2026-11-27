@@ -8,7 +8,7 @@ import {load,run,inspect,fixtures,defaultFile} from '../runtime.mjs';
 function temp(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ilk-layout-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));return dir}
 function put(root,file,content){const dest=path.join(root,file);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,content);return dest}
 const input={requested:8,available:5,unit_price:250};
-const simple=(refs='',call='minimum.capability')=>`Allocation\n\nIntake\n    requested: integer\n    available: integer\n\n${refs}Capability\n    allocation = ${call}(requested, available)\n\nOuttake\n    allocation: integer\n    allocation -> parent\n`;
+const simple=(refs='',call='minimum.capability')=>`Allocation\n\nIntake\n    requested: integer\n    available: integer\n\n${refs}Capability\n    allocation = ${call}(requested, available)\n\nOuttake\n    allocation: integer\n`;
 const context='Stock\n\nFields\n    available: Available stock\n';
 const contract='Allocation\n\nRequire\n    requested >= 0\n    available >= 0\n\nGuarantee\n    allocation = min(requested, available)\n';
 
