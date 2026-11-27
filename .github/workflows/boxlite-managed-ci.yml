@@ -1,0 +1,65 @@
+name: BoxLite managed CI
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: boxlite-managed-ci
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: boxlite
+    timeout-minutes: 10
+    steps:
+      - name: Verify runner
+        shell: bash
+        run: |
+          echo "BoxLite runner is working"
+          uname -s
+          uname -m
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Verify framework
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          node cli.mjs test projects/order
+          node cli.mjs test projects/mode-order
+      - name: Verify deployed dashboard locally on the runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOST=127.0.0.1 PORT=8799 node server.mjs > "$RUNNER_TEMP/ic3o-preview.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true; cat "$RUNNER_TEMP/ic3o-preview.log"' EXIT
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const base = 'http://127.0.0.1:8799';
+          let page;
+          for (let i = 0; i < 30; i++) {
+            try { page = await fetch(base); if (page.ok) break; } catch {}
+            await new Promise(r => setTimeout(r, 500));
+          }
+          assert.ok(page?.ok, 'Dashboard not reachable');
+          assert.match(await page.text(), /ic3o/i);
+          const network = await fetch(base + '/api/network');
+          assert.ok(network.ok);
+          const tests = await fetch(base + '/api/tests');
+          assert.ok(tests.ok);
+          const fixtures = await tests.json();
+          assert.ok(fixtures.length && fixtures.every(f => f.pass));
+          const run = await fetch(base + '/api/run', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({requested:8, available:5, unit_price:250})
+          });
+          assert.ok(run.ok);
+          assert.deepEqual((await run.json()).output, {allocation:5,total:1250,remaining:0});
+          console.log('Dashboard, fixtures and execution verified on BoxLite managed runner');
+          JS
