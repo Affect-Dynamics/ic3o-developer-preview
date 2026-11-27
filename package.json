@@ -16,7 +16,8 @@
     "storage:bench": "node projects/social/benchmark.mjs",
     "sidechain:demo": "node projects/sidechain-demo/demo.mjs",
     "bridge:demo": "node experiments/bridge/demo.mjs",
-    "bridge:conditional": "node experiments/bridge-conditional/demo.mjs"
+    "bridge:conditional": "node experiments/bridge-conditional/demo.mjs",
+    "context:demo": "node experiments/context-conditioning/demo.mjs"
   },
   "engines": {
     "node": ">=22.13"

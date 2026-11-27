@@ -1,0 +1,5 @@
+Invoice order context
+
+Fields
+    total: Settled price in cents
+    due: Amount due after deposit

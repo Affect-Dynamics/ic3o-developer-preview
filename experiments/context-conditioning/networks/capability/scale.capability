@@ -1,0 +1,11 @@
+Scale
+
+Intake
+    a: number
+    b: number
+
+Implementation
+    native: multiply
+
+Outtake
+    result: number
