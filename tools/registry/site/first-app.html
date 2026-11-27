@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'"><title>Build your first application | ic3o documentation</title><link rel="stylesheet" href="style.css"><script type="module" src="docs.mjs"></script></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="index.html">◇ ic3o <small>/ documentation</small></a><a href="https://github.com/Affect-Dynamics/ic3o-developer-preview">GitHub ↗</a></header><div class="shell"><aside><nav aria-label="Documentation"><p class="navlabel">GET STARTED</p><a href="index.html">Overview</a><a href="quickstart.html">Install & first run</a><a href="first-app.html" aria-current="page">Build your first application</a><p class="navlabel">LEARN THE FRAMEWORK</p><a href="architecture.html">Mental model</a><a href="language.html">Native definitions</a><a href="composition.html">Networks & Modes</a><a href="infrastructure.html">Sidechains & state</a><p class="navlabel">DEVELOPER WORKFLOW</p><a href="cli.html">CLI reference</a><a href="contribute.html">Contribution guide</a><a href="troubleshoot.html">Troubleshooting</a><a href="registry.html">Registry</a><a href="status.html">Development status</a><p class="navlabel">COMMUNITY</p><a href="https://github.com/Affect-Dynamics/gh-ic3o">CLI extension ↗</a><a href="https://github.com/Affect-Dynamics/ic3o-developer-preview/issues">Issues ↗</a><a href="https://github.com/Affect-Dynamics/ic3o-developer-preview/pulls">Pull requests ↗</a></nav></aside><main id="main"><p class="crumb">Documentation / Build your first application</p><h1>Build your first application</h1><p class="lead">A hands-on tutorial using the actual multiplication scaffold. By the end you will inspect, execute, deliberately break and restore a contract.</p><details class="toc" open><summary>On this page</summary><a href="#create">1. Scaffold outside the framework</a><a href="#read">2. Read the three definitions</a><a href="#validate">3. Validate and run</a><a href="#playground">4. Explore the behavior</a><a href="#break">5. Prove that execution is not fulfillment</a><a href="#fixtures">6. Add a regression fixture</a><a href="#next-step">7. Move beyond multiplication</a></details>
+<h2 id="create">1. Scaffold outside the framework</h2><p>Complete the <a href="quickstart.html">installation guide</a>, then run in a directory where you keep projects.</p><pre><code>gh ic3o init my-app
+cd my-app
+gh ic3o inspect pep/my-app.pep</code></pre><pre><code>my-app/
+  context/my-app.context
+  contract/my-app.contract
+  pep/my-app.pep
+  fixtures.json
+  README.md
+  .gitignore</code></pre><p>The generated app is a multiplication starter, not a complete business application. The command refuses to overwrite an existing project directory.</p>
+<h2 id="read">2. Read the three definitions</h2><h3>Context: context/my-app.context</h3><pre><code>Order context
+Fields
+    quantity: Quantity
+    price: Unit price
+    total: Total price</code></pre><h3>Contract: contract/my-app.contract</h3><pre><code>Order contract
+Require
+    quantity &gt;= 0
+    price &gt;= 0
+Guarantee
+    total = quantity * price</code></pre><h3>PEP: pep/my-app.pep</h3><pre><code>my-app
+Intake
+    quantity: integer
+    price: integer
+Capability
+    total = multiply.capability(quantity, price)
+Outtake
+    total: integer
+    total -&gt; response</code></pre><p>The matching stems bind Context and Contract implicitly. <code>multiply.capability</code> is already available from the registry.</p>
+<h2 id="validate">3. Validate and run</h2><pre><code>gh ic3o validate pep/my-app.pep
+gh ic3o resolve pep/my-app.pep
+gh ic3o test pep/my-app.pep
+gh ic3o run pep/my-app.pep quantity=7 price=13</code></pre><p>Expect two passing scaffold fixtures, then output <code>total: 91</code>. The trace lists requirements, the actual capability input and output, and the guarantee. Resolve reports existing bindings; it does not choose an implementation for you.</p>
+<h2 id="playground">4. Explore the behavior</h2><p>This small browser exercise models the starter's integer inputs and contract. It is an educational simulation, not the actual runtime. The CLI remains the authoritative execution path.</p><div class="exercise"><label for="quantity">Quantity</label><input id="quantity" type="number" step="1" value="7"><label for="price">Unit price</label><input id="price" type="number" step="1" value="13"><label for="guarantee">Guarantee</label><select id="guarantee"><option value="multiply">total = quantity * price</option><option value="add">total = quantity + price</option></select><button id="execute" type="button">Evaluate example</button><pre id="exercise-result" aria-live="polite">Select Evaluate example.</pre></div>
+<h2 id="break">5. Prove that execution is not fulfillment</h2><p>Run a rejected input:</p><pre><code>gh ic3o run pep/my-app.pep quantity=-1 price=5</code></pre><p>Now open <code>contract/my-app.contract</code> in your editor. Temporarily replace its guarantee with <code>total = quantity + price</code>. Re-run the input 7 and 13. Expect a guarantee failure, despite multiplication producing 91. Restore <code>total = quantity * price</code> and rerun the tests.</p><p class="note">Use a single arithmetic operation. The current assertion evaluator does not support expressions such as quantity * price + 1.</p>
+<h2 id="fixtures">6. Add a regression fixture</h2><p>Open fixtures.json and append this object to the existing JSON array, separating it from the previous object with a comma.</p><pre><code>{
+  "name": "zero quantity",
+  "input": {"quantity": 0, "price": 5},
+  "expected": {"total": 0}
+}</code></pre><p>Run <code>gh ic3o test pep/my-app.pep</code> again. Expect three passing cases. This extends evidence for the application without changing the contract.</p>
+<h2 id="next-step">7. Move beyond multiplication</h2><p>Browse the bundled order and Mode-backed examples through <code>gh ic3o dashboard</code> → Applications → Browse bundled examples. Those demonstrate child PEPs and reusable infrastructure. The <a href="composition.html">composition guide</a> explains how they work.</p><p class="next"><a href="language.html">Continue: Native definitions →</a></p><footer>Affect Dynamics · <a href="https://github.com/Affect-Dynamics/ic3o-developer-preview">Framework source</a> · <a href="https://github.com/Affect-Dynamics/gh-ic3o">Contributor extension</a></footer></main></div></body></html>
