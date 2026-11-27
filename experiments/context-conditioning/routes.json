@@ -1,0 +1,14 @@
+{
+  "entry": "price",
+  "terminals": ["invoice", "approval"],
+  "networks": {
+    "price": "networks/pep/price.pep",
+    "invoice": "networks/pep/invoice.pep",
+    "approval": "networks/pep/approval.pep"
+  },
+  "maxHops": 3,
+  "routes": [
+    {"id": "to-approval", "from": "price", "to": "approval", "when": "total > 1500", "map": {"total": "total"}},
+    {"id": "to-invoice", "from": "price", "to": "invoice", "when": "total <= 1500", "map": {"total": "total"}}
+  ]
+}

@@ -1,0 +1,7 @@
+Approval review contract
+
+Require
+    total >= 0
+
+Guarantee
+    review_fee >= 0

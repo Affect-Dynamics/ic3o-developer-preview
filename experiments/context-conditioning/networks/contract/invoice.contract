@@ -1,0 +1,7 @@
+Invoice order contract
+
+Require
+    total >= 0
+
+Guarantee
+    due >= 0

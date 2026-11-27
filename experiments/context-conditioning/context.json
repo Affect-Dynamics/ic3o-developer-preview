@@ -1,0 +1,50 @@
+{
+  "conditions": {
+    "channel": {"type": "text", "domain": ["retail", "wholesale", "internal"]},
+    "season": {"type": "text", "domain": ["standard", "promo"]}
+  },
+  "constraints": [
+    {"id": "no-internal-promo", "require": "not (channel = \"internal\" and season = \"promo\")"}
+  ],
+  "derived": {
+    "tier": {
+      "type": "text",
+      "from": ["channel", "season"],
+      "table": {
+        "retail": {"standard": "list", "promo": "sale"},
+        "wholesale": {"standard": "sale", "promo": "trade"},
+        "internal": {"standard": "cost"}
+      }
+    },
+    "coefficient": {
+      "type": "number",
+      "from": ["tier"],
+      "table": {"list": 1, "sale": 0.75, "trade": 0.5, "cost": 0.5}
+    },
+    "handling_rate": {
+      "type": "number",
+      "from": ["channel"],
+      "table": {"retail": 5, "wholesale": 3, "internal": 0}
+    },
+    "rebate": {
+      "type": "number",
+      "from": ["channel"],
+      "table": {"retail": 0, "wholesale": 50, "internal": 100}
+    },
+    "deposit": {
+      "type": "number",
+      "from": ["channel"],
+      "table": {"retail": 0, "wholesale": 200, "internal": 0}
+    },
+    "review_rate": {
+      "type": "number",
+      "from": ["channel"],
+      "table": {"retail": 0.25, "wholesale": 0.125, "internal": 0}
+    }
+  },
+  "bindings": {
+    "price": {"ctx_coefficient": "coefficient", "ctx_handling_rate": "handling_rate", "ctx_rebate": "rebate"},
+    "invoice": {"ctx_deposit": "deposit"},
+    "approval": {"ctx_review_rate": "review_rate"}
+  }
+}

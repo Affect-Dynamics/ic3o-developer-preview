@@ -1,0 +1,5 @@
+Approval review context
+
+Fields
+    total: Settled price in cents
+    review_fee: Review fee in cents

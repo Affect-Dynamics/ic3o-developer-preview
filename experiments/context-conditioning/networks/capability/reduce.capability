@@ -1,0 +1,11 @@
+Reduce
+
+Intake
+    a: number
+    b: number
+
+Implementation
+    native: subtract
+
+Outtake
+    result: number
