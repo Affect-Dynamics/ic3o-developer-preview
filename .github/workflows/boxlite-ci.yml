@@ -1,0 +1,64 @@
+name: BoxLite CI experiment
+on:
+  push:
+    branches: [experiment/boxlite-ci]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sandbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Check virtualization support
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -c /dev/kvm ]]; then
+            echo "::error::No /dev/kvm on this runner. BoxLite needs a KVM-capable runner."
+            exit 1
+          fi
+          getent group kvm >/dev/null || sudo groupadd --system kvm
+          sudo chgrp kvm /dev/kvm
+          sudo chmod 660 /dev/kvm
+          sudo usermod -aG kvm "$(id -un)"
+          ls -l /dev/kvm
+          sg kvm -c 'id; exec 3<>/dev/kvm; exec 3>&-'
+      - name: Install BoxLite (experimental upstream installer)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location https://sh.boxlite.ai -o "$RUNNER_TEMP/boxlite-install.sh"
+          sh "$RUNNER_TEMP/boxlite-install.sh"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Verify in disposable microVMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Execute BoxLite with fresh KVM group membership, not as root.
+          sg kvm -c 'bash -se' <<'BOXLITE_TEST'
+          set -euo pipefail
+          id
+          exec 3<>/dev/kvm
+          exec 3>&-
+          unset BOXLITE_API_KEY BOXLITE_REST_URL BOXLITE_CONTEXT BOXLITE_PROFILE
+          export BOXLITE_HOME="$(mktemp -d)"
+          snapshot="$(mktemp -d)"
+          trap 'rm -rf "$snapshot" "$BOXLITE_HOME"' EXIT
+          git archive HEAD | tar -x -C "$snapshot"
+          echo "Source: $(git rev-parse HEAD)"
+          boxlite --version
+          image=node:22-bookworm-slim
+          boxlite pull "$image"
+          boxlite images
+          boxlite run --rm --network disabled --inbound disabled --cpus 2 --memory 2048 "$image" node --version
+          set +e
+          boxlite run --rm --network disabled --inbound disabled "$image" node -e 'process.exit(42)'
+          status=$?
+          set -e
+          test "$status" -eq 42
+          boxlite run --rm --network disabled --inbound disabled --cpus 2 --memory 2048 -v "$snapshot:/source:ro" "$image" sh -ec 'mkdir /work; cp -R /source/. /work/; cd /work; npm ci --ignore-scripts --offline; npm test; node cli.mjs test projects/order; node cli.mjs test projects/mode-order'
+          BOXLITE_TEST
