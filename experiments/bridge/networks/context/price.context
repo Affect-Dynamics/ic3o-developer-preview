@@ -1,0 +1,6 @@
+Price quantity context
+
+Fields
+    quantity: Item count being priced
+    unit_price: Unit price in cents
+    total: Order cost in cents

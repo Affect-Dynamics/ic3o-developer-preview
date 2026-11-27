@@ -1,0 +1,23 @@
+{
+  "entry": "allocate",
+  "terminals": ["invoice"],
+  "networks": {
+    "allocate": "networks/pep/allocate.pep",
+    "price": "networks/pep/price.pep",
+    "invoice": "networks/pep/invoice.pep"
+  },
+  "routes": [
+    {
+      "id": "allocate-to-price",
+      "from": "allocate",
+      "to": "price",
+      "map": {"quantity": "allocation", "unit_price": "unit_price"}
+    },
+    {
+      "id": "price-to-invoice",
+      "from": "price",
+      "to": "invoice",
+      "map": {"total": "total"}
+    }
+  ]
+}
