@@ -1,0 +1,7 @@
+Unavailable inventory contract
+
+Require
+    requested >= 0
+
+Guarantee
+    backordered = requested

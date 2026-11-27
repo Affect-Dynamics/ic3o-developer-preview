@@ -1,0 +1,5 @@
+Unavailable inventory context
+
+Fields
+    requested: Requested item count
+    backordered: Items placed on backorder

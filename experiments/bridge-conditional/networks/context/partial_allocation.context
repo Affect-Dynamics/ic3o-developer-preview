@@ -1,0 +1,8 @@
+Partial allocation context
+
+Fields
+    quantity: Item count that could be fulfilled
+    requested: Requested item count
+    unit_price: Unit price in cents
+    total: Cost of the fulfilled items in cents
+    shortfall: Items that could not be fulfilled
