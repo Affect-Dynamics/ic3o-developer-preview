@@ -79,7 +79,7 @@ export async function main(root,output,token){
     if(git(root,['status','--porcelain','--untracked-files=all']))throw Error('Build from a clean checkout');
     const data=await buildCatalog(root,revision,{lookup:token?commit=>lookupGithub(commit,token):async commit=>githubAttribution(commit,null,[])});
     fs.mkdirSync(output,{recursive:true});
-    for(const file of ['index.html','style.css','app.mjs'])fs.copyFileSync(path.join(root,'tools','registry','site',file),path.join(output,file));
+    for(const file of ['index.html','quickstart.html','contribute.html','registry.html','status.html','style.css','app.mjs','status.mjs','cycle.svg'])fs.copyFileSync(path.join(root,'tools','registry','site',file),path.join(output,file));
     fs.writeFileSync(path.join(output,'catalog.json'),JSON.stringify(data,null,2)+'\n');
     fs.writeFileSync(path.join(output,'.nojekyll'),'');
     console.log('Registry: '+data.entries.length+' native definitions at '+revision);
