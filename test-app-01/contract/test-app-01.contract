@@ -1,0 +1,6 @@
+Order contract
+Require
+    quantity >= 0
+    price >= 0
+Guarantee
+    total = quantity * price
