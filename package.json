@@ -14,7 +14,8 @@
     "validate": "node cli.mjs validate",
     "storage:demo": "node projects/social/demo.mjs",
     "storage:bench": "node projects/social/benchmark.mjs",
-    "sidechain:demo": "node projects/sidechain-demo/demo.mjs"
+    "sidechain:demo": "node projects/sidechain-demo/demo.mjs",
+    "bridge:demo": "node experiments/bridge/demo.mjs"
   },
   "engines": {
     "node": ">=22.13"

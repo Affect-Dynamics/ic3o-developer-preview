@@ -1,0 +1,7 @@
+Allocate stock context
+
+Fields
+    requested: Requested item count
+    available: Available stock count
+    unit_price: Unit price in cents
+    allocation: Fulfillable item count
