@@ -1,0 +1,6 @@
+Execution admission context
+Fields
+    principal: Trusted host identity
+    authorized: Trusted host grant decision
+    request: Serialized execution request
+    commitment: Request commitment
