@@ -24,6 +24,3 @@ Outtake
     allocation: integer
     total: integer
     remaining: integer
-    allocation -> response
-    total -> response
-    remaining -> inventory_preview

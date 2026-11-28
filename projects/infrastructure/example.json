@@ -1,0 +1,6 @@
+{
+  "root": "../..",
+  "registry": {"order": "projects/order/pep/order.pep"},
+  "grants": {"operator": ["order"]},
+  "journalFile": "execution.sqlite"
+}

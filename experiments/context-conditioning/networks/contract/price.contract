@@ -1,0 +1,8 @@
+Price order contract
+
+Require
+    quantity >= 0
+    unit_price >= 0
+
+Guarantee
+    total >= 0

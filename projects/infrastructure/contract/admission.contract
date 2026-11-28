@@ -1,0 +1,5 @@
+Execution admission policy
+Require
+    authorized = 1
+Guarantee
+    commitment = sha256(request)

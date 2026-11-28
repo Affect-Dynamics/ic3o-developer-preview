@@ -1,0 +1,7 @@
+Invoice contract
+
+Require
+    total >= 0
+
+Guarantee
+    due = total

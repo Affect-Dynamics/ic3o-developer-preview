@@ -13,4 +13,3 @@ Capability
 
 Outtake
     allocation: integer
-    allocation -> parent

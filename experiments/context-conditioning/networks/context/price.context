@@ -1,0 +1,7 @@
+Price order context
+
+Fields
+    quantity: Item count being priced
+    unit_price: Unit price in cents
+    total: Adjusted price after context conditioning
+    handling: Separately reported handling charge

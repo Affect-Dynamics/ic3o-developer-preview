@@ -235,6 +235,10 @@ Open both context pages. Execute a valid order in either page. Their snapshots u
 
 See [PROVENANCE.md](PROVENANCE.md) for revision history, contract projection, benchmark commands and limitations.
 
+## Routing replaced by effect capabilities
+
+Outtake no longer accepts `name -> destination` lines; they are rejected with guidance. A capability with `effect: true` under `Implementation` (native `deliver`) is deferred: it runs after the network's Guarantees and the `after_execute` and `before_outtake` hooks, in declaration order, and is traced as kind `Effect`. Effect outputs cannot be consumed by other steps or exposed in Outtake. Without a host `execution.deliver` binding the run fails closed. `run()` no longer returns `deliveries`. A child PEP's effects fire at the child's own handoff, after the child's Guarantees but before the parent's. The text above that mentions routes and `->` is historical.
+
 ## v0.9: PEP sidechains
 
 See [SIDECHAINS.md](SIDECHAINS.md) for native declarations, inheritance, lifecycle hooks, execution journal and limitations. Run `npm run sidechain:demo -- ./execution-evidence.db`.

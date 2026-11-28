@@ -1,0 +1,5 @@
+Invoice context
+
+Fields
+    total: Order cost in cents
+    due: Amount due in cents

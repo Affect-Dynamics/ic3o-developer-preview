@@ -10,4 +10,3 @@ Capability
 
 Outtake
     commitment: text
-    commitment -> evidence

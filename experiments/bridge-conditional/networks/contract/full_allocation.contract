@@ -1,0 +1,8 @@
+Full allocation contract
+
+Require
+    quantity > 0
+    unit_price >= 0
+
+Guarantee
+    total = quantity * unit_price

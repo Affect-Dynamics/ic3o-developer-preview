@@ -12,7 +12,7 @@ function network(t,op){
  fs.writeFileSync(path.join(dir,'context','check.context'),'Numerical inputs\nFields\n    a: First integer\n    b: Second integer\n    result: Result\n');
  fs.writeFileSync(path.join(dir,'contract','check.contract'),'Numerical result\nGuarantee\n    result = result\n');
  const file=path.join(dir,'pep','check.pep');
- fs.writeFileSync(file,'Numerical check\nUse\n    numerical\nIntake\n    a: integer\n    b: integer\nCapability\n    result = numerical:'+op+'.capability(a, b)\nOuttake\n    result: integer\n    result -> response\n');
+ fs.writeFileSync(file,'Numerical check\nUse\n    numerical\nIntake\n    a: integer\n    b: integer\nCapability\n    result = numerical:'+op+'.capability(a, b)\nOuttake\n    result: integer\n');
  return load(file);
 }
 test('addition is exact and rejects overflow',t=>{
